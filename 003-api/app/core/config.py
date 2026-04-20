@@ -8,6 +8,10 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     debug: bool = False
     api_v1_prefix: str = "/api/v1"
+    initial_microwave_count: int = 2
+    default_microwave_power: int = 5
+    min_microwave_power: int = 1
+    max_microwave_power: int = 10
 
     model_config = SettingsConfigDict(
         env_prefix="APP_",
