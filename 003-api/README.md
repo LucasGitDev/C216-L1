@@ -84,6 +84,22 @@ Example start payload:
 uv run pytest
 ```
 
+## Generate persisted test report
+
+Run the test suite and update the versioned report artifacts:
+
+```bash
+uv run python scripts/run_tests_with_report.py
+```
+
+Generated files:
+
+- `reports/last-test-report.md`
+- `reports/last-test-results.xml`
+- `reports/last-test-output.txt`
+
+This keeps the latest known test status inside the repository in both human-readable and machine-readable formats.
+
 ## Run with Docker
 
 Build the image:
