@@ -42,6 +42,7 @@ def run_pytest(pytest_args: list[str]) -> subprocess.CompletedProcess[str]:
         sys.executable,
         "-m",
         "pytest",
+        "-v",
         "--junitxml",
         str(XML_REPORT_PATH),
         *pytest_args,
@@ -124,16 +125,7 @@ def build_markdown_report(
     summary: TestSummary,
 ) -> str:
     generated_at = datetime.now(UTC).replace(microsecond=0).isoformat()
-    command_text = shlex.join(
-        [
-            sys.executable,
-            "-m",
-            "pytest",
-            "--junitxml",
-            str(XML_REPORT_PATH.relative_to(ROOT)),
-            *command[5:],
-        ]
-    )
+    command_text = shlex.join(command)
     cases = summary.cases or []
     passed_count = sum(1 for case in cases if case.status == "passed")
     failing_cases = [case for case in cases if case.status in {"failed", "error"}]
@@ -217,6 +209,7 @@ def main() -> int:
         sys.executable,
         "-m",
         "pytest",
+        "-v",
         "--junitxml",
         str(XML_REPORT_PATH),
         *pytest_args,

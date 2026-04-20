@@ -1,4 +1,16 @@
 [stdout]
-..................                                                       [100%]
+============================= test session starts ==============================
+platform darwin -- Python 3.12.13, pytest-8.4.2, pluggy-1.6.0
+rootdir: /Users/lucas/dev/lucas/inatel/C216-L1/003-api
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.13.0
+collected 18 items
+
+tests/test_app.py .                                                      [  5%]
+tests/test_health.py ..                                                  [ 16%]
+tests/test_microwaves.py ............                                    [ 83%]
+tests/test_openapi.py ...                                                [100%]
+
 - generated xml file: /Users/lucas/dev/lucas/inatel/C216-L1/003-api/reports/last-test-results.xml -
-18 passed in 1.20s
+============================== 18 passed in 1.20s ==============================
