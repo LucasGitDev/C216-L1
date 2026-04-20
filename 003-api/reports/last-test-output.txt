@@ -1,4 +1,4 @@
 [stdout]
-...............                                                          [100%]
-- generated xml file: /private/tmp/003-api-test-report-worktree/003-api/reports/last-test-results.xml -
-15 passed in 1.16s
+..................                                                       [100%]
+- generated xml file: /Users/lucas/dev/lucas/inatel/C216-L1/003-api/reports/last-test-results.xml -
+18 passed in 1.20s
