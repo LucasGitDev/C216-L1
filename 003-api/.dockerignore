@@ -13,7 +13,11 @@ build
 .coverage
 htmlcov
 tests
-README.md
 .python-version
 .mypy_cache
 .ruff_cache
+reports
+img
+scripts
+docker-compose.yml
+uv.lock
