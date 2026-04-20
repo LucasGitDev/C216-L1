@@ -1,9 +1,9 @@
 # 003 API
 
-Base scaffold for a FastAPI service with:
+FastAPI service for managing microwaves in memory with:
 
-- clear folder architecture
-- centralized middleware registration
+- multiple microwave instances
+- control actions for start, stop, and reset
 - automated tests with `pytest`
 - Docker and `docker-compose` support
 
@@ -37,10 +37,45 @@ Start the API:
 uv run uvicorn main:app --reload
 ```
 
-The health endpoint will be available at:
+The main endpoints will be available at:
 
 ```text
 http://localhost:8000/api/v1/health
+http://localhost:8000/api/v1/microwaves
+```
+
+## Microwave model
+
+Each microwave is stored in memory with:
+
+- `id`
+- `is_on`
+- `ends_at`
+- `power`
+- `content`
+- `created_at`
+- `updated_at`
+
+The API starts with 2 microwaves preloaded and allows creating or deleting more.
+
+## Microwave endpoints
+
+- `GET /api/v1/microwaves`
+- `POST /api/v1/microwaves`
+- `GET /api/v1/microwaves/{id}`
+- `DELETE /api/v1/microwaves/{id}`
+- `POST /api/v1/microwaves/{id}/start`
+- `POST /api/v1/microwaves/{id}/stop`
+- `POST /api/v1/microwaves/{id}/reset`
+
+Example start payload:
+
+```json
+{
+  "duration_seconds": 30,
+  "power": 7,
+  "content": "pizza"
+}
 ```
 
 ## Run tests
