@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="220" viewBox="0 0 1400 220">
-  <rect width="100%" height="100%" fill="#0f172a" />
-  <rect x="12" y="12" width="1376" height="196" rx="16" fill="#111827" stroke="#334155" />
-  <text x="24" y="42" fill="#93c5fd" font-size="24" font-weight="700">Docker Compose PS</text>
-  <g font-family="Menlo, Monaco, Consolas, monospace" font-size="18">
-    <text x="24" y="68" fill="#e5e7eb">NAME                IMAGE                   COMMAND                  SERVICE   CREATED         STATUS         PORTS</text><text x="24" y="96" fill="#e5e7eb">004-crud-students   004-crud-students-api   &quot;uvicorn main:app --…&quot;   api       8 seconds ago   Up 8 seconds   0.0.0.0:8000-&gt;8000/t</text><text x="24" y="124" fill="#e5e7eb">cp, [::]:8000-&gt;8000/tcp</text>
-  </g>
-</svg>
