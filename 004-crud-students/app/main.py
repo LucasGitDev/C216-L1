@@ -22,10 +22,11 @@ Use os endpoints de `alunos` para criar novos registros, consultar um aluno espe
 atualizar seus dados, removê-lo da coleção em memória ou resetar a lista inteira.
 
 Regras principais:
-- os cursos aceitos são `GES` e `GEC`
+- os cursos aceitos são `GES`, `GEC`, `GEB` e `GEP`
 - a matrícula é sequencial por curso e gerada automaticamente
 - o `id` é formado por `curso + matrícula`, como `GES1` e `GEC2`
 - ids e matrículas não são reutilizados após exclusão
+- o e-mail deve seguir o padrão `aluno.sobrenome@curso.inatel.br`
 - `PATCH` atualiza apenas os campos enviados
 """.strip()
 

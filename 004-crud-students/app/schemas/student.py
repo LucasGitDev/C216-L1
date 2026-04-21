@@ -1,12 +1,18 @@
 from datetime import datetime
 from enum import Enum
+import re
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
+
+
+INATEL_EMAIL_PATTERN = re.compile(r"^[a-z]+(?:\.[a-z]+)+@(gec|ges|geb|gep)\.inatel\.br$")
 
 
 class CourseCode(str, Enum):
     GES = "GES"
     GEC = "GEC"
+    GEB = "GEB"
+    GEP = "GEP"
 
 
 class StudentBase(BaseModel):
@@ -18,12 +24,12 @@ class StudentBase(BaseModel):
     )
     email: EmailStr = Field(
         ...,
-        description="E-mail principal do aluno. Deve ser único.",
-        examples=["ana.clara@example.com"],
+        description="E-mail institucional do aluno no formato `aluno.sobrenome@curso.inatel.br`.",
+        examples=["ana.clara@ges.inatel.br"],
     )
     course: CourseCode = Field(
         ...,
-        description="Curso do aluno. Valores aceitos: `GES` e `GEC`.",
+        description="Curso do aluno. Valores aceitos: `GES`, `GEC`, `GEB` e `GEP`.",
         examples=["GES"],
     )
     active: bool = Field(
@@ -32,13 +38,30 @@ class StudentBase(BaseModel):
         examples=[True],
     )
 
+    @field_validator("email")
+    @classmethod
+    def validate_inatel_email_format(cls, value: EmailStr) -> EmailStr:
+        normalized = value.lower()
+        if not INATEL_EMAIL_PATTERN.fullmatch(normalized):
+            raise ValueError(
+                "email must follow the format aluno.sobrenome@curso.inatel.br"
+            )
+        return normalized
+
+    @model_validator(mode="after")
+    def validate_email_matches_course(self) -> "StudentBase":
+        email_course = self.email.split("@", maxsplit=1)[1].split(".", maxsplit=1)[0].upper()
+        if email_course != self.course.value:
+            raise ValueError("email domain course must match course field")
+        return self
+
 
 class StudentCreateRequest(StudentBase):
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
                 "name": "Ana Clara Souza",
-                "email": "ana.clara@example.com",
+                "email": "ana.clara@ges.inatel.br",
                 "course": "GES",
                 "active": True,
             }
@@ -51,7 +74,7 @@ class StudentUpdateRequest(BaseModel):
         json_schema_extra={
             "example": {
                 "name": "Ana Souza",
-                "email": "ana.souza@example.com",
+                "email": "ana.souza@gec.inatel.br",
                 "course": "GEC",
                 "active": False,
             }
@@ -66,12 +89,12 @@ class StudentUpdateRequest(BaseModel):
     )
     email: EmailStr | None = Field(
         default=None,
-        description="E-mail principal do aluno. Deve ser único.",
-        examples=["ana.souza@example.com"],
+        description="E-mail institucional do aluno no formato `aluno.sobrenome@curso.inatel.br`.",
+        examples=["ana.souza@gec.inatel.br"],
     )
     course: CourseCode | None = Field(
         default=None,
-        description="Curso do aluno. Valores aceitos: `GES` e `GEC`.",
+        description="Curso do aluno. Valores aceitos: `GES`, `GEC`, `GEB` e `GEP`.",
         examples=["GEC"],
     )
     active: bool | None = Field(
@@ -79,6 +102,27 @@ class StudentUpdateRequest(BaseModel):
         description="Indica se a matrícula do aluno está ativa.",
         examples=[False],
     )
+
+    @field_validator("email")
+    @classmethod
+    def validate_optional_inatel_email_format(cls, value: EmailStr | None) -> EmailStr | None:
+        if value is None:
+            return None
+        normalized = value.lower()
+        if not INATEL_EMAIL_PATTERN.fullmatch(normalized):
+            raise ValueError(
+                "email must follow the format aluno.sobrenome@curso.inatel.br"
+            )
+        return normalized
+
+    @model_validator(mode="after")
+    def validate_optional_email_matches_course(self) -> "StudentUpdateRequest":
+        if self.email is None or self.course is None:
+            return self
+        email_course = self.email.split("@", maxsplit=1)[1].split(".", maxsplit=1)[0].upper()
+        if email_course != self.course.value:
+            raise ValueError("email domain course must match course field")
+        return self
 
 
 class StudentResponse(StudentBase):
@@ -88,7 +132,7 @@ class StudentResponse(StudentBase):
             "example": {
                 "id": "GES1",
                 "name": "Ana Clara Souza",
-                "email": "ana.clara@example.com",
+                "email": "ana.clara@ges.inatel.br",
                 "course": "GES",
                 "matricula": 1,
                 "active": True,
@@ -124,7 +168,7 @@ class StudentCollectionResponse(BaseModel):
                     {
                         "id": "GES1",
                         "name": "Ana Clara Souza",
-                        "email": "ana.clara@example.com",
+                        "email": "ana.clara@ges.inatel.br",
                         "course": "GES",
                         "matricula": 1,
                         "active": True,
@@ -134,7 +178,7 @@ class StudentCollectionResponse(BaseModel):
                     {
                         "id": "GEC1",
                         "name": "Bruno Lima",
-                        "email": "bruno.lima@example.com",
+                        "email": "bruno.lima@gec.inatel.br",
                         "course": "GEC",
                         "matricula": 1,
                         "active": True,

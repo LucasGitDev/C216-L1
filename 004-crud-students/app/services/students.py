@@ -52,6 +52,7 @@ class StudentService:
         active: bool = True,
     ) -> dict[str, object]:
         with self._lock:
+            self._ensure_email_matches_course(email=email, course=course)
             self._ensure_unique(email=email)
             student = self._create_state(
                 name=name,
@@ -72,6 +73,10 @@ class StudentService:
     ) -> dict[str, object]:
         with self._lock:
             student = self._get_student_or_404(student_id)
+            next_course = course if course is not None else student.course
+            next_email = email if email is not None else student.email
+            self._ensure_email_matches_course(email=next_email, course=next_course)
+
             if email is not None:
                 self._ensure_unique(email=email, ignored_id=student_id)
                 student.email = email
@@ -104,13 +109,13 @@ class StudentService:
         defaults = [
             {
                 "name": "Ana Clara Souza",
-                "email": "ana.clara@example.com",
+                "email": "ana.clara@ges.inatel.br",
                 "course": CourseCode.GES,
                 "active": True,
             },
             {
                 "name": "Bruno Lima",
-                "email": "bruno.lima@example.com",
+                "email": "bruno.lima@gec.inatel.br",
                 "course": CourseCode.GEC,
                 "active": True,
             },
@@ -123,8 +128,12 @@ class StudentService:
         for index in range(extra_count):
             self._create_state(
                 name=f"Student {index + 3}",
-                email=f"student{index + 3}@example.com",
-                course=CourseCode.GES if index % 2 == 0 else CourseCode.GEC,
+                email=(
+                    f"student.{index + 3}@"
+                    f"{(CourseCode.GES if index % 4 == 0 else CourseCode.GEC if index % 4 == 1 else CourseCode.GEB if index % 4 == 2 else CourseCode.GEP).value.lower()}"
+                    ".inatel.br"
+                ),
+                course=CourseCode.GES if index % 4 == 0 else CourseCode.GEC if index % 4 == 1 else CourseCode.GEB if index % 4 == 2 else CourseCode.GEP,
                 active=True,
             )
 
@@ -198,7 +207,18 @@ class StudentService:
         return {
             CourseCode.GES: 1,
             CourseCode.GEC: 1,
+            CourseCode.GEB: 1,
+            CourseCode.GEP: 1,
         }
+
+    @staticmethod
+    def _ensure_email_matches_course(*, email: str, course: CourseCode) -> None:
+        email_course = email.split("@", maxsplit=1)[1].split(".", maxsplit=1)[0].upper()
+        if email_course != course.value:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="dominio do email deve corresponder ao curso informado",
+            )
 
 
 settings = get_settings()

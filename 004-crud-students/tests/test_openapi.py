@@ -47,7 +47,7 @@ def test_openapi_components_include_examples_for_student_schemas(
     schemas = payload["components"]["schemas"]
 
     assert schemas["StudentCreateRequest"]["example"]["course"] == "GES"
-    assert schemas["StudentCreateRequest"]["example"]["email"] == "ana.clara@example.com"
+    assert schemas["StudentCreateRequest"]["example"]["email"] == "ana.clara@ges.inatel.br"
     assert schemas["StudentResponse"]["example"]["id"] == "GES1"
     assert schemas["StudentResponse"]["example"]["matricula"] == 1
     assert schemas["ErrorResponse"]["example"] == {"detail": "aluno nao encontrado"}
