@@ -9,13 +9,24 @@ OPENAPI_TAGS = [
         "name": "health",
         "description": "Endpoints de verificação básica da API.",
     },
+    {
+        "name": "alunos",
+        "description": "Operações para listar, criar, consultar, atualizar, remover e resetar alunos em memória.",
+    },
 ]
 
 API_DESCRIPTION = """
-API base para exercícios com FastAPI.
+API para gerenciamento de alunos em memória.
 
-O projeto começa com um endpoint de healthcheck e infraestrutura pronta para expansão
-com rotas versionadas, middlewares, testes automatizados e execução com Docker.
+Use os endpoints de `alunos` para criar novos registros, consultar um aluno específico,
+atualizar seus dados, removê-lo da coleção em memória ou resetar a lista inteira.
+
+Regras principais:
+- os cursos aceitos são `GES` e `GEC`
+- a matrícula é sequencial por curso e gerada automaticamente
+- o `id` é formado por `curso + matrícula`, como `GES1` e `GEC2`
+- ids e matrículas não são reutilizados após exclusão
+- `PATCH` atualiza apenas os campos enviados
 """.strip()
 
 
@@ -24,7 +35,7 @@ def create_application() -> FastAPI:
 
     application = FastAPI(
         title=settings.app_name,
-        summary="Boilerplate FastAPI para exercícios REST.",
+        summary="CRUD de alunos em memória via REST.",
         description=API_DESCRIPTION,
         debug=settings.debug,
         version=settings.app_version,
