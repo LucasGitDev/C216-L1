@@ -8,7 +8,10 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     debug: bool = False
     api_v1_prefix: str = "/api/v1"
-    initial_student_count: int = 0
+    database_url: str = "postgresql://postgres:postgres@localhost:5432/students"
+    database_url_test: str = "postgresql://postgres:postgres@localhost:5432/students_test"
+    db_pool_min_size: int = 1
+    db_pool_max_size: int = 10
 
     model_config = SettingsConfigDict(
         env_prefix="APP_",

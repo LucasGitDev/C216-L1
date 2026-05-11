@@ -1,10 +1,11 @@
 [project]
 name = "004-crud-students"
 version = "0.1.0"
-description = "FastAPI boilerplate for an in-memory student CRUD application."
+description = "FastAPI student CRUD backed by PostgreSQL via asyncpg."
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "asyncpg>=0.29.0,<1.0.0",
     "email-validator>=2.2.0,<3.0.0",
     "fastapi>=0.115.0,<1.0.0",
     "pydantic-settings>=2.6.0,<3.0.0",
@@ -15,6 +16,7 @@ dependencies = [
 dev = [
     "httpx>=0.28.0,<1.0.0",
     "pytest>=8.3.0,<9.0.0",
+    "pytest-asyncio>=0.24.0,<1.0.0",
 ]
 
 [build-system]
@@ -27,3 +29,6 @@ packages = ["app"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
