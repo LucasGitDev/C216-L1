@@ -1,5 +1,9 @@
-from fastapi import APIRouter, Body, Path, Response, status
+from __future__ import annotations
 
+import asyncpg
+from fastapi import APIRouter, Body, Depends, Path, Response, status
+
+from app.api.deps import get_conn
 from app.schemas.student import (
     ErrorResponse,
     StudentCollectionResponse,
@@ -7,7 +11,7 @@ from app.schemas.student import (
     StudentResponse,
     StudentUpdateRequest,
 )
-from app.services.students import student_service
+from app.services import students as students_service
 
 router = APIRouter(prefix="/alunos")
 
@@ -44,11 +48,14 @@ CONFLICT_RESPONSE = {
     "",
     response_model=StudentCollectionResponse,
     summary="Listar alunos",
-    description="Retorna todos os alunos atualmente mantidos em memória pela API.",
+    description="Retorna todos os alunos persistidos no banco de dados PostgreSQL.",
     operation_id="listStudents",
 )
-async def list_students() -> StudentCollectionResponse:
-    return StudentCollectionResponse(items=student_service.list_students())
+async def list_students(
+    conn: asyncpg.Connection = Depends(get_conn),
+) -> StudentCollectionResponse:
+    items = await students_service.list_students(conn)
+    return StudentCollectionResponse(items=items)
 
 
 @router.post(
@@ -56,7 +63,7 @@ async def list_students() -> StudentCollectionResponse:
     response_model=StudentResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Cadastrar aluno",
-    description="Cria um novo aluno em memória com matrícula automática e ID derivado do curso.",
+    description="Cria um novo aluno com matrícula automática e ID derivado do curso.",
     operation_id="createStudent",
     responses={
         201: {"description": "Aluno criado com sucesso."},
@@ -68,8 +75,10 @@ async def create_student(
         ...,
         description="Dados do aluno a ser criado.",
     ),
+    conn: asyncpg.Connection = Depends(get_conn),
 ) -> StudentResponse:
-    return StudentResponse.model_validate(student_service.create_student(**payload.model_dump()))
+    row = await students_service.create_student(conn, **payload.model_dump())
+    return StudentResponse.model_validate(row)
 
 
 @router.get(
@@ -80,8 +89,12 @@ async def create_student(
     operation_id="getStudent",
     responses={404: NOT_FOUND_RESPONSE},
 )
-async def get_student(student_id: str = STUDENT_ID_PATH) -> StudentResponse:
-    return StudentResponse.model_validate(student_service.get_student(student_id))
+async def get_student(
+    student_id: str = STUDENT_ID_PATH,
+    conn: asyncpg.Connection = Depends(get_conn),
+) -> StudentResponse:
+    row = await students_service.get_student(conn, student_id)
+    return StudentResponse.model_validate(row)
 
 
 @router.patch(
@@ -101,28 +114,32 @@ async def update_student(
         ...,
         description="Dados parciais do aluno a serem atualizados.",
     ),
+    conn: asyncpg.Connection = Depends(get_conn),
 ) -> StudentResponse:
-    return StudentResponse.model_validate(
-        student_service.update_student(
-            student_id,
-            **payload.model_dump(exclude_none=True),
-        )
+    row = await students_service.update_student(
+        conn,
+        student_id,
+        **payload.model_dump(exclude_none=True),
     )
+    return StudentResponse.model_validate(row)
 
 
 @router.delete(
     "/{student_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Remover aluno",
-    description="Remove um aluno da coleção em memória. Após a remoção, o ID deixa de ser válido.",
+    description="Remove um aluno do banco. Após a remoção, o ID deixa de ser válido.",
     operation_id="deleteStudent",
     responses={
         204: {"description": "Aluno removido com sucesso."},
         404: NOT_FOUND_RESPONSE,
     },
 )
-async def delete_student(student_id: str = STUDENT_ID_PATH) -> Response:
-    student_service.delete_student(student_id)
+async def delete_student(
+    student_id: str = STUDENT_ID_PATH,
+    conn: asyncpg.Connection = Depends(get_conn),
+) -> Response:
+    await students_service.delete_student(conn, student_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -130,12 +147,14 @@ async def delete_student(student_id: str = STUDENT_ID_PATH) -> Response:
     "",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Resetar lista de alunos",
-    description="Remove todos os alunos atualmente carregados, preservando a sequência de geração de IDs por curso.",
+    description="Remove todos os alunos atualmente cadastrados, preservando a sequência de geração de IDs por curso.",
     operation_id="resetStudents",
     responses={
         204: {"description": "Lista de alunos resetada com sucesso."},
     },
 )
-async def reset_students() -> Response:
-    student_service.reset_students()
+async def reset_students(
+    conn: asyncpg.Connection = Depends(get_conn),
+) -> Response:
+    await students_service.reset_students(conn)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
