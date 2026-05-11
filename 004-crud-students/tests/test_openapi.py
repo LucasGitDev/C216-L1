@@ -1,15 +1,15 @@
-from fastapi.testclient import TestClient
+from httpx import AsyncClient
 
 
-def test_openapi_schema_exposes_tag_metadata(client: TestClient) -> None:
-    response = client.get("/openapi.json")
+async def test_openapi_schema_exposes_tag_metadata(client: AsyncClient) -> None:
+    response = await client.get("/openapi.json")
 
     assert response.status_code == 200
     payload = response.json()
 
     assert payload["info"]["title"] == "004 CRUD Alunos"
-    assert payload["info"]["summary"] == "CRUD de alunos em memória via REST."
-    assert "gerenciamento de alunos em memória" in payload["info"]["description"]
+    assert payload["info"]["summary"] == "CRUD de alunos via REST com persistência em PostgreSQL."
+    assert "PostgreSQL" in payload["info"]["description"]
     assert payload["tags"] == [
         {
             "name": "health",
@@ -17,13 +17,13 @@ def test_openapi_schema_exposes_tag_metadata(client: TestClient) -> None:
         },
         {
             "name": "alunos",
-            "description": "Operações para listar, criar, consultar, atualizar, remover e resetar alunos em memória.",
+            "description": "Operações para listar, criar, consultar, atualizar, remover e resetar alunos persistidos no PostgreSQL.",
         },
     ]
 
 
-def test_openapi_student_endpoint_documents_requests_and_errors(client: TestClient) -> None:
-    response = client.get("/openapi.json")
+async def test_openapi_student_endpoint_documents_requests_and_errors(client: AsyncClient) -> None:
+    response = await client.get("/openapi.json")
 
     assert response.status_code == 200
     payload = response.json()
@@ -37,10 +37,10 @@ def test_openapi_student_endpoint_documents_requests_and_errors(client: TestClie
     assert operation["requestBody"]["required"] is True
 
 
-def test_openapi_components_include_examples_for_student_schemas(
-    client: TestClient,
+async def test_openapi_components_include_examples_for_student_schemas(
+    client: AsyncClient,
 ) -> None:
-    response = client.get("/openapi.json")
+    response = await client.get("/openapi.json")
 
     assert response.status_code == 200
     payload = response.json()
