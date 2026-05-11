@@ -1,11 +1,11 @@
 # 004 CRUD Students
 
-API FastAPI para gerenciamento de alunos em memória com:
+API FastAPI para gerenciamento de alunos com persistência em **PostgreSQL** via `asyncpg`.
 
 - CRUD completo em `/api/v1/alunos`
-- geração automática de matrícula e ID por curso
-- testes automatizados de API com `pytest`
-- execução obrigatória com `docker-compose`
+- matrícula sequencial por curso emitida via `SEQUENCE` no banco
+- testes automatizados de API com `pytest` + `pytest-asyncio`
+- execução com `docker-compose` (API + PostgreSQL com healthcheck)
 - evidências em `img/`
 
 ## Project structure
@@ -14,69 +14,89 @@ API FastAPI para gerenciamento de alunos em memória com:
 .
 ├── app
 │   ├── api
+│   │   ├── deps.py            # dependency get_conn -> asyncpg.Connection
 │   │   └── v1
 │   ├── core
+│   ├── db
+│   │   └── pool.py            # init/close/get_pool (asyncpg.Pool)
 │   ├── middlewares
+│   ├── repositories
+│   │   └── students.py        # queries SQL puras
 │   ├── schemas
 │   └── services
+│       └── students.py        # regras de negócio
+├── scripts
+│   └── init.sql               # schema + sequences (auto-aplicado no container postgres)
 ├── tests
+├── docker-compose.yml         # services: postgres + api
 ├── Dockerfile
-├── docker-compose.yml
 ├── main.py
 └── pyproject.toml
 ```
 
 ## Cursos suportados
 
-- `GES`
-- `GEC`
+`GES`, `GEC`, `GEB`, `GEP`
 
 ## Estrutura do aluno
 
-Cada aluno possui:
-
-- `name`
-- `email`
-- `course`
-- `matricula`
-- `id`
-- `active`
-- `created_at`
-- `updated_at`
+Cada aluno possui: `id`, `name`, `email`, `course`, `matricula`, `active`, `created_at`, `updated_at`.
 
 Regras:
 
-- `matricula` é sequencial por curso
+- `matricula` é sequencial por curso, emitida pela `SEQUENCE seq_matricula_<curso>` no PostgreSQL
 - `id` é montado como `CURSO + matricula`, por exemplo `GES1`, `GES2`, `GEC1`
-- se um aluno for removido, o identificador não é reutilizado
-- `DELETE /api/v1/alunos` limpa a lista atual sem reiniciar a sequência já emitida
+- ids/matrículas **não são reutilizados** após exclusão (sequence não recua)
+- `DELETE /api/v1/alunos` apaga todos os registros mas preserva a sequence
+- `email` deve seguir `aluno.sobrenome@curso.inatel.br` e o curso do domínio precisa bater com o campo `course`
+
+## Variáveis de ambiente
+
+Copie o template:
+
+```bash
+cp .env.example .env
+```
+
+Variáveis disponíveis:
+
+| Nome | Default | Descrição |
+| --- | --- | --- |
+| `POSTGRES_USER` | `postgres` | usuário do container postgres |
+| `POSTGRES_PASSWORD` | `postgres` | senha do container postgres |
+| `POSTGRES_DB` | `students` | nome do DB principal |
+| `APP_DEBUG` | `false` | FastAPI debug |
+| `APP_DATABASE_URL` | `postgresql://postgres:postgres@localhost:5432/students` | DSN usado pela API |
+| `APP_DATABASE_URL_TEST` | `postgresql://postgres:postgres@localhost:5432/students_test` | DSN usado pelos testes |
 
 ## Executar com docker-compose
 
-Suba a API:
+Sobe Postgres + API:
 
 ```bash
 docker compose up --build
 ```
 
-Principais endpoints:
+Apenas o Postgres (útil para rodar a API localmente):
+
+```bash
+docker compose up -d postgres
+```
+
+Endpoints principais:
 
 ```text
 http://localhost:8000/api/v1/health
 http://localhost:8000/api/v1/alunos
 ```
 
-## Executar localmente sem Docker
+## Executar localmente sem Docker (somente API)
 
-Instale dependências com `uv`:
+Pressuposto: container `postgres` já rodando via compose.
 
 ```bash
 uv sync --dev
-```
-
-Suba a API:
-
-```bash
+cp .env.example .env  # ajustar APP_DATABASE_URL se necessário
 uv run uvicorn main:app --reload
 ```
 
@@ -94,7 +114,7 @@ Exemplo de payload de criação:
 ```json
 {
   "name": "Ana Clara Souza",
-  "email": "ana.clara@example.com",
+  "email": "ana.clara@ges.inatel.br",
   "course": "GES",
   "active": true
 }
@@ -102,38 +122,38 @@ Exemplo de payload de criação:
 
 ## Testes automatizados
 
+Pré-requisito: Postgres rodando (`docker compose up -d postgres`). O conftest cria o DB de teste (`students_test`) se ainda não existir e aplica `scripts/init.sql`.
+
 ```bash
 uv run pytest
 ```
 
-Os testes cobrem:
+Os testes cobrem (requisitos do passo 005):
 
-- cadastro de 3 alunos por curso
+- cadastro de **3 alunos por curso** (`GES`, `GEC`, `GEB`, `GEP`)
 - listagem de alunos
 - busca por ID
-- atualização parcial via `PATCH`
-- mudança de curso com novo ID
-- remoção individual
-- reset da lista
-- garantia de não reutilização de IDs
+- atualização parcial via `PATCH` (inclusive mudança de curso com novo ID)
+- remoção individual e reset da lista
+- garantia de não reutilização de IDs/matrículas
+- **validação de persistência**: o teste insere via API e lê o registro com uma conexão `asyncpg` fresh
 
-Para gerar o relatório persistido:
+Para gerar relatórios persistidos:
 
 ```bash
 uv run python scripts/run_tests_with_report.py
 ```
 
-Arquivos gerados:
+Artefatos gerados em `reports/` e `img/`.
 
-- `reports/last-test-report.md`
-- `reports/last-test-results.xml`
-- `reports/last-test-output.txt`
-- `img/*.svg`
+## Validação manual de persistência
 
-## Environment variables
+```bash
+docker compose up -d
+curl -X POST http://localhost:8000/api/v1/alunos \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Foo Bar","email":"foo.bar@ges.inatel.br","course":"GES"}'
 
-- `APP_APP_NAME`: application name
-- `APP_APP_VERSION`: application version
-- `APP_DEBUG`: enable FastAPI debug mode
-- `APP_API_V1_PREFIX`: API v1 prefix
-- `APP_INITIAL_STUDENT_COUNT`: number of students preloaded at startup
+docker compose restart api
+curl http://localhost:8000/api/v1/alunos  # o aluno continua presente
+```
