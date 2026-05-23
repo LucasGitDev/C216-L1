@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: 006-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-professores}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-professores}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: 006-backend
+    environment:
+      APP_DEBUG: ${APP_DEBUG:-false}
+      APP_DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-professores}
+      APP_DB_POOL_MIN_SIZE: ${APP_DB_POOL_MIN_SIZE:-1}
+      APP_DB_POOL_MAX_SIZE: ${APP_DB_POOL_MAX_SIZE:-10}
+      APP_API_V1_PREFIX: ${APP_API_V1_PREFIX:-/api/v1}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: 006-frontend
+    environment:
+      API_URL: ${API_URL:-http://backend:8000/api/v1/professores}
+      FLASK_SECRET: ${FLASK_SECRET:-dev-secret}
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-3001}:3000"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
