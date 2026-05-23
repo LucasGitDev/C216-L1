@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Sobre</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    {% include 'navbar.html' %}
+    {% include '_messages.html' %}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <h2 class="mb-1">Lucas Teles de Souza</h2>
+                <p class="text-muted mb-3">
+                    Matrícula <strong>94</strong> · Engenharia de Software (GES) · Inatel · Brasil
+                </p>
+                <p class="lead">
+                    Senior Software Engineer (Staff-level) — Backend, Cloud e Sistemas Distribuídos.
+                </p>
+                <p>
+                    Construo serviços backend escaláveis, plataformas cloud-native e arquiteturas
+                    production-grade. Foco em Go, Node.js/TypeScript, Infrastructure as Code e
+                    system design.
+                </p>
+
+                <h4 class="mt-4">O que faço</h4>
+                <ul>
+                    <li>Design e construção de APIs e serviços backend de alta escalabilidade e confiabilidade.</li>
+                    <li>Infraestrutura cloud (AWS / GCP / OCI) com IaC (Terraform / CDK / CDKTF).</li>
+                    <li>Sistemas distribuídos com caching, mensageria e processamento assíncrono.</li>
+                    <li>Padrões de engenharia — decisões de arquitetura, documentação e code review.</li>
+                    <li>Operação em produção — performance tuning, mitigação de incidentes, automação de delivery.</li>
+                </ul>
+
+                <h4 class="mt-4">Stack</h4>
+                <ul class="list-unstyled">
+                    <li><strong>Linguagens:</strong> Go, TypeScript, JavaScript, Python</li>
+                    <li><strong>Backend:</strong> Node.js, NestJS, Express, gRPC, FastAPI</li>
+                    <li><strong>Bancos:</strong> PostgreSQL, MySQL, MongoDB, Cassandra / ScyllaDB</li>
+                    <li><strong>Mensageria &amp; Cache:</strong> Kafka, Redis</li>
+                    <li><strong>Cloud &amp; DevOps:</strong> AWS, GCP, OCI, Docker, Terraform, CI/CD, Nginx</li>
+                    <li><strong>Frontend:</strong> React, Next.js</li>
+                </ul>
+
+                <h4 class="mt-4">Sobre este projeto</h4>
+                <p>
+                    Prática 5 da disciplina <strong>C216 — Sistemas Distribuídos</strong>: um frontend
+                    Flask consumindo um backend FastAPI / asyncpg com persistência em PostgreSQL,
+                    orquestrado via Docker Compose. CRUD de professores com camadas
+                    <code>api / services / repositories / schemas</code>, pool de conexões e
+                    middleware <code>X-Process-Time</code>.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% include '_footer.html' %}
+</body>
+</html>
